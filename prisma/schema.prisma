@@ -1,0 +1,278 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  phone     String?
+  role      UserRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Plumber specific fields
+  plumberProfile PlumberProfile?
+  
+  // Job relationships
+  jobsCreated  Job[]     @relation("JobCreator") // dispatcher creates jobs
+  jobsAssigned Job[]     @relation("JobAssignee") // plumber assigned to jobs
+  reviews      Review[]  @relation("ReviewAuthor") // homeowner writes reviews
+  reviewsReceived Review[] @relation("ReviewTarget") // plumber receives reviews
+  earnings     Earning[]
+  photos       Photo[]
+
+  @@map("users")
+}
+
+model PlumberProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Gamification
+  xp           Int @default(0)
+  level        Int @default(1)
+  forgeScore   Float @default(0.0)
+  
+  // Availability
+  isActive     Boolean @default(true)
+  
+  // Preferences
+  preferences  JobPreference?
+  badges       PlumberBadge[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("plumber_profiles")
+}
+
+model JobPreference {
+  id              String @id @default(cuid())
+  plumberProfileId String @unique
+  plumberProfile  PlumberProfile @relation(fields: [plumberProfileId], references: [id], onDelete: Cascade)
+
+  // Preferred job types
+  preferredJobTypes String[] // e.g., ["leak_repair", "installation", "maintenance"]
+  
+  // Distance preferences
+  maxDistanceKm   Int @default(50)
+  
+  // Availability windows
+  mondayStart     String? // e.g., "08:00"
+  mondayEnd       String? // e.g., "17:00"
+  tuesdayStart    String?
+  tuesdayEnd      String?
+  wednesdayStart  String?
+  wednesdayEnd    String?
+  thursdayStart   String?
+  thursdayEnd     String?
+  fridayStart     String?
+  fridayEnd       String?
+  saturdayStart   String?
+  saturdayEnd     String?
+  sundayStart     String?
+  sundayEnd       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("job_preferences")
+}
+
+model Job {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  jobType     String    // e.g., "leak_repair", "installation", "maintenance"
+  urgency     JobUrgency @default(MEDIUM)
+  status      JobStatus @default(REQUESTED)
+  
+  // Location
+  address     String
+  latitude    Float?
+  longitude   Float?
+  
+  // Relationships
+  createdById String
+  createdBy   User   @relation("JobCreator", fields: [createdById], references: [id])
+  
+  assignedToId String?
+  assignedTo   User?  @relation("JobAssignee", fields: [assignedToId], references: [id])
+  
+  // Job workflow
+  quotes      Quote[]
+  photos      Photo[]
+  reviews     Review[]
+  earnings    Earning[]
+  
+  // Timestamps
+  requestedAt   DateTime @default(now())
+  scheduledAt   DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("jobs")
+}
+
+model Quote {
+  id     String @id @default(cuid())
+  jobId  String
+  job    Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  // Quote tiers
+  goodTitle       String
+  goodDescription String
+  goodPrice       Float
+
+  betterTitle       String
+  betterDescription String
+  betterPrice       Float
+
+  bestTitle       String
+  bestDescription String
+  bestPrice       Float
+
+  // Selected tier
+  selectedTier QuoteTier?
+  
+  // Status
+  status QuoteStatus @default(PENDING)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("quotes")
+}
+
+model Review {
+  id       String @id @default(cuid())
+  jobId    String
+  job      Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  authorId String
+  author   User   @relation("ReviewAuthor", fields: [authorId], references: [id])
+  
+  targetId String
+  target   User   @relation("ReviewTarget", fields: [targetId], references: [id])
+  
+  rating   Int    // 1-5 stars
+  comment  String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("reviews")
+}
+
+model Earning {
+  id       String @id @default(cuid())
+  jobId    String
+  job      Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  plumberId String
+  plumber   User   @relation(fields: [plumberId], references: [id])
+  
+  amount   Float
+  xpAwarded Int @default(0)
+  
+  createdAt DateTime @default(now())
+
+  @@map("earnings")
+}
+
+model Photo {
+  id       String @id @default(cuid())
+  jobId    String
+  job      Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  uploadedById String
+  uploadedBy   User   @relation(fields: [uploadedById], references: [id])
+  
+  filename String
+  url      String
+  caption  String?
+  
+  createdAt DateTime @default(now())
+
+  @@map("photos")
+}
+
+model Badge {
+  id          String @id @default(cuid())
+  name        String @unique
+  description String
+  icon        String
+  xpRequired  Int
+  
+  // Badge criteria
+  criteria    Json // Flexible JSON field for badge requirements
+  
+  plumberBadges PlumberBadge[]
+  
+  createdAt DateTime @default(now())
+
+  @@map("badges")
+}
+
+model PlumberBadge {
+  id               String @id @default(cuid())
+  plumberProfileId String
+  plumberProfile   PlumberProfile @relation(fields: [plumberProfileId], references: [id], onDelete: Cascade)
+  
+  badgeId String
+  badge   Badge  @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  
+  unlockedAt DateTime @default(now())
+
+  @@unique([plumberProfileId, badgeId])
+  @@map("plumber_badges")
+}
+
+// Enums
+enum UserRole {
+  PLUMBER
+  DISPATCHER
+  HOMEOWNER
+  ADMIN
+}
+
+enum JobStatus {
+  REQUESTED
+  QUOTED
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum JobUrgency {
+  LOW
+  MEDIUM
+  HIGH
+  EMERGENCY
+}
+
+enum QuoteStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum QuoteTier {
+  GOOD
+  BETTER
+  BEST
+}
