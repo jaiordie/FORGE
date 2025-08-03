@@ -2,7 +2,8 @@
   "name": "forge-platform",
   "version": "1.0.0",
   "description": "FORGE - Field Service Management Platform",
-  "main": "dist/index.js",
+  "main": "electron/main.js",
+  "homepage": "./",
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
@@ -12,6 +13,14 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "ts-node scripts/seed.ts",
+    "electron": "electron .",
+    "electron-dev": "concurrently \"npm run dev\" \"cd frontend && npm start\" \"wait-on http://localhost:3000 && wait-on http://localhost:3001 && electron .\"",
+    "build-frontend": "cd frontend && npm run build",
+    "build-all": "npm run build && npm run build-frontend",
+    "dist": "npm run build-all && electron-builder",
+    "dist-win": "npm run build-all && electron-builder --win",
+    "dist-mac": "npm run build-all && electron-builder --mac",
+    "dist-linux": "npm run build-all && electron-builder --linux",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -25,7 +34,6 @@
     "url": "https://github.com/jaiordie/FORGE/issues"
   },
   "homepage": "https://github.com/jaiordie/FORGE#readme",
-  "description": "",
   "dependencies": {
     "@prisma/client": "^6.13.0",
     "bcryptjs": "^3.0.2",
@@ -45,8 +53,74 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.1.0",
+    "concurrently": "^9.2.0",
+    "cross-env": "^10.0.0",
+    "electron": "^37.2.5",
+    "electron-builder": "^26.0.12",
+    "electron-is-dev": "^3.0.1",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "wait-on": "^8.0.4"
+  },
+  "build": {
+    "appId": "com.forge.platform",
+    "productName": "FORGE",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron/**/*",
+      "dist/**/*",
+      "frontend/build/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "uploads",
+        "to": "uploads",
+        "filter": ["**/*"]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.business",
+      "icon": "electron/assets/icon.png",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ]
+    },
+    "win": {
+      "icon": "electron/assets/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "linux": {
+      "icon": "electron/assets/icon.png",
+      "category": "Office",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   }
 }
