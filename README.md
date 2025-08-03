@@ -21,6 +21,14 @@
 - **ForgeScore** composite metric
 - **Availability Toggle** for active/inactive status
 
+### ✅ Phase 2.5: Desktop Application (COMPLETED)
+- **Electron Desktop App** with cross-platform support
+- **Native Window Management** and application menus
+- **Embedded Backend Server** (no external dependencies)
+- **SQLite Database** for portability
+- **Build Scripts** for Windows, macOS, and Linux
+- **Security Hardening** with context isolation
+
 ### 🚧 Remaining Phases (TODO)
 - **Phase 3**: Job detail & quoting flow components
 - **Phase 4**: Homeowner portal for job requests
@@ -68,34 +76,33 @@
 
 ## 🚀 Quick Start
 
-### Backend Setup
+### Web App Setup
 ```bash
-# Install dependencies
+# Backend
 npm install
-
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your database credentials
-
-# Generate Prisma client
+cp .env.example .env  # Edit with your database credentials
 npm run db:generate
-
-# Start development server
+npm run db:seed
 npm run dev
-```
 
-### Frontend Setup
-```bash
+# Frontend (in another terminal)
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start React development server
 npm start
 ```
 
-The backend will run on `http://localhost:3000` and the frontend on `http://localhost:3001`.
+### Desktop App Setup
+```bash
+# Install all dependencies
+npm install
+cd frontend && npm install && cd ..
+
+# Run as desktop app
+npm run electron-dev
+```
+
+The web app runs on `http://localhost:3000` (backend) and `http://localhost:3001` (frontend).  
+The desktop app launches as a native application window.
 
 ### 🎯 Demo Credentials
 Use these credentials to test the application:
