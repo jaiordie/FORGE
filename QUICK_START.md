@@ -8,32 +8,38 @@
 
 ## 🌐 Option 1: Run as Web Application
 
-### 1️⃣ Backend Setup
+### ✅ **Quick Start (Recommended)**
 
+1. **Open terminal in Cursor**
+   ```bash
+   npm install
+   ```
+
+2. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+3. **Open your browser**
+   Cursor will show the local server link:
+   ```
+   VITE server running at http://localhost:5173/
+   ```
+
+### 📋 **Detailed Setup (If needed)**
+
+**Backend Setup:**
 ```bash
 # Install dependencies
 npm install
 
-# Create environment file
+# Create environment file (optional - has defaults)
 cp .env.example .env
-```
 
-**Edit `.env` with your settings:**
-```env
-DATABASE_URL="postgresql://username:password@localhost:5432/forge_db?schema=public"
-JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
-JWT_EXPIRES_IN="7d"
-PORT=3000
-NODE_ENV="development"
-```
-
-```bash
 # Generate Prisma client
 npm run db:generate
 
-# Run database migrations
-npm run db:migrate
-# OR push schema directly
+# Setup database (PostgreSQL or SQLite)
 npm run db:push
 
 # Seed with demo data
@@ -43,10 +49,7 @@ npm run db:seed
 npm run dev
 ```
 
-**Backend will be running at:** `http://localhost:3000`
-
-### 2️⃣ Frontend Setup
-
+**Frontend Setup (separate terminal):**
 ```bash
 # Navigate to frontend directory
 cd frontend
@@ -57,8 +60,6 @@ npm install
 # Start React development server
 npm start
 ```
-
-**Frontend will be running at:** `http://localhost:3001`
 
 ### 3️⃣ Access the Application
 
